@@ -1,0 +1,924 @@
+NVIDIA API + OPENAI PYTHON SDK BEGINNER-FRIENDLY STUDY NOTES
+================================
+
+WHAT DOES THIS PROGRAM DO?
+
+This Python program sends a question to an AI model hosted by NVIDIA and
+prints the model’s answer in the terminal.
+
+Example question: What is the square root of 49?
+
+The basic communication flow is:
+
+    Python program
+        |
+        | Sends an API request
+        v
+    NVIDIA API
+        |
+        | Sends the request to the selected model
+        v
+    Nemotron AI model
+        |
+        | Generates an answer
+        v
+    NVIDIA API
+        |
+        | Returns the response
+        v
+    Python program prints the answer
+
+An API (Application Programming Interface) lets one program communicate
+with another service. An LLM API lets our program send messages to an AI
+model and receive generated responses.
+
+1. IMPORTING LIBRARIES
+
+Code:
+
+    from openai import OpenAI
+    from dotenv import load_dotenv
+    from pathlib import Path
+    import os
+    import json
+
+What does import mean? Python has built-in features and external
+libraries. We use import to make their functionality available in our
+program.
+
+A. from openai import OpenAI
+
+    from openai import OpenAI
+
+Imports the OpenAI class from the openai Python library.
+
+Why use it when we are communicating with NVIDIA?
+
+NVIDIA provides an API that supports the OpenAI-compatible API format.
+This means we can use the OpenAI Python SDK as the communication tool
+while setting the destination to NVIDIA’s API.
+
+Remember: OpenAI SDK = the Python communication tool. NVIDIA API = the
+service we are communicating with. Nemotron = the AI model we are asking
+to generate a response.
+
+Using the OpenAI SDK does NOT mean we are using an OpenAI model.
+
+B. from dotenv import load_dotenv
+
+    from dotenv import load_dotenv
+
+Imports the load_dotenv() function.
+
+We store our secret API key in a file called .env instead of writing the
+key directly inside our Python code.
+
+Example .env file:
+
+    NVIDIA_API_KEY=your_actual_secret_key
+
+load_dotenv() reads the .env file and loads its variables into the
+environment so Python can retrieve them.
+
+C. from pathlib import Path
+
+    from pathlib import Path
+
+Imports Path, which helps Python work with file and folder locations.
+
+Example:
+
+    Path("my_folder/.env")
+
+This represents the path to a file named .env inside my_folder.
+
+D. import os
+
+    import os
+
+Imports Python’s operating-system utilities.
+
+In this program, os is used to retrieve environment variables.
+
+Example:
+
+    os.getenv("NVIDIA_API_KEY")
+
+This gets the value of the environment variable named NVIDIA_API_KEY.
+
+E. import json
+
+    import json
+
+Imports Python’s JSON library.
+
+JSON stands for JavaScript Object Notation. It is a format used to
+represent and exchange structured data.
+
+Example JSON:
+
+    {
+        "name": "Harish",
+        "age": 20
+    }
+
+In this program, json is used in an optional section to display the
+complete API response in a readable, indented format.
+
+Note: json is not needed for the basic API call.
+
+2. LOADING THE ENVIRONMENT VARIABLES
+
+Code:
+
+    load_dotenv(
+        Path(__file__).resolve().parent / ".env",
+        override=True
+    )
+
+This loads the .env file located in the same folder as the Python file.
+
+Let’s understand each part.
+
+A. file
+
+    __file__
+
+A special Python variable that represents the location of the currently
+executing Python file.
+
+For example, suppose the Python file is:
+
+    C:\\Users\\You\\Desktop\\MyProject\\main.py
+
+B. Path(file)
+
+Converts the file location into a Path object.
+
+C. .resolve()
+
+    Path(__file__).resolve()
+
+Gets the absolute, resolved path of the Python file.
+
+D. .parent
+
+    Path(__file__).resolve().parent
+
+Gets the folder containing the Python file.
+
+For example:
+
+    C:\\Users\\You\\Desktop\\MyProject
+
+E. / “.env”
+
+    Path(__file__).resolve().parent / ".env"
+
+The / operator joins path parts. Here it adds the .env filename to the
+folder path.
+
+The complete expression means:
+
+    Find the .env file in the same folder as this Python file.
+
+F. override=True
+
+If an environment variable with the same name already exists,
+override=True allows the value from the .env file to replace it.
+
+Overall:
+
+    load_dotenv(...)
+
+Reads the selected .env file and loads its variables into the
+environment.
+
+Example folder structure:
+
+    MyProject/
+        main.py
+        .env
+
+Keep your .env file private. Do not upload your real API key to GitHub.
+
+3. GETTING THE API KEY
+
+Code:
+
+    api_key = os.getenv("NVIDIA_API_KEY")
+
+This retrieves the value of NVIDIA_API_KEY from the environment and
+stores it in a Python variable named api_key.
+
+Suppose the .env file contains:
+
+    NVIDIA_API_KEY=abc123xyz
+
+Then, conceptually:
+
+    api_key = "abc123xyz"
+
+The actual key should remain secret. The example above is only a
+placeholder.
+
+CHECKING WHETHER THE KEY EXISTS
+
+Code:
+
+    if not api_key:
+        raise ValueError("NVIDIA_API_KEY not found in .env file")
+
+Meaning:
+
+    if not api_key:
+
+Checks whether api_key is missing or empty.
+
+    raise ValueError(...)
+
+Intentionally raises an error and stops the program.
+
+Why do this?
+
+Without a valid API key, the program cannot authenticate with the NVIDIA
+API. This check helps us find a configuration problem early.
+
+Important Python concept: if = checks a condition not = reverses a truth
+value raise = raises an exception (error) ValueError = one type of
+Python exception
+
+4. CREATING THE NVIDIA CLIENT
+
+Code:
+
+    client = OpenAI(
+        base_url="https://integrate.api.nvidia.com/v1",
+        api_key=api_key.strip()
+    )
+
+What is a client?
+
+A client is an object that helps our Python program communicate with an
+external service.
+
+Here, we create an OpenAI SDK client configured to communicate with
+NVIDIA’s API.
+
+A. base_url
+
+    base_url="https://integrate.api.nvidia.com/v1"
+
+This tells the SDK which API server to communicate with.
+
+The SDK normally has OpenAI’s API as its default destination. By
+providing NVIDIA’s base_url, we direct requests to NVIDIA instead.
+
+B. api_key
+
+    api_key=api_key.strip()
+
+Provides the API key for authentication.
+
+C. strip()
+
+    api_key.strip()
+
+Removes unnecessary whitespace from the beginning and end of a string.
+
+Example:
+
+    key = "  abc123  "
+    print(key.strip())
+
+Output:
+
+    abc123
+
+Why use strip()?
+
+An accidental space before or after an API key could cause an
+authentication problem.
+
+Overall:
+
+    client = OpenAI(...)
+
+Creates a client configured with NVIDIA’s API address and our
+authentication key.
+
+5. SELECTING THE AI MODEL
+
+Code:
+
+    MODEL = "nvidia/nemotron-3.5-lightning-30b-a3b"
+
+This stores the model identifier in a variable named MODEL.
+
+Why uppercase?
+
+Python does not require uppercase variable names. However, programmers
+commonly use uppercase names for constants: values that are intended to
+remain unchanged while the program runs.
+
+The model identifier tells the API which model we want to use.
+
+We can change the identifier to another model if that model is available
+and supported by the NVIDIA API.
+
+Think of this as choosing which AI model will answer our question.
+
+6. MAKING THE FIRST API CALL
+
+Code:
+
+    result = client.chat.completions.create(
+        model=MODEL,
+        messages=[
+            {"role": "user", "content": "What is the square root of 49?"}
+        ]
+    )
+
+This is the main part of the program. It sends a chat request to the AI
+model and stores the returned response in result.
+
+Let’s understand it piece by piece.
+
+A. client.chat.completions.create()
+
+This is a method provided by the OpenAI Python SDK.
+
+Read it from left to right:
+
+    client
+        Our configured API client.
+
+    chat
+        Accesses chat functionality.
+
+    completions
+        Accesses chat-completion functionality.
+
+    create()
+        Sends a request to generate a response.
+
+In simple language:
+
+    Send a chat request to the selected AI model.
+
+B. model=MODEL
+
+    model=MODEL
+
+Tells the API which model should process the request.
+
+Because we previously wrote:
+
+    MODEL = "nvidia/nemotron-3.5-lightning-30b-a3b"
+
+Using model=MODEL is equivalent to writing the model name directly.
+
+C. messages
+
+    messages=[
+        {"role": "user", "content": "What is the square root of 49?"}
+    ]
+
+The messages parameter contains the conversation messages we want to
+send to the model.
+
+A message generally has two important parts:
+
+    role     = who is speaking?
+    content  = what are they saying?
+
+Example:
+
+    {"role": "user", "content": "Hello"}
+
+This means the user is saying Hello.
+
+Important message roles:
+
+    system
+        Instructions that guide the model's behaviour.
+
+    user
+        A message or question from the user.
+
+    assistant
+        A response generated by the AI assistant.
+
+D. result
+
+    result = client.chat.completions.create(...)
+
+The API returns a structured response object. We store that object in
+the variable result.
+
+Important: result does not contain only the answer text. It contains a
+structured response with choices, message information, usage information
+and other metadata.
+
+7. EXTRACTING THE GENERATED ANSWER
+
+Code:
+
+    print(result.choices[0].message.content)
+
+This line extracts the actual text generated by the AI.
+
+Understand each part:
+
+    result
+
+The complete response object returned by the API.
+
+    .choices
+
+The response contains a list called choices. A choice represents a
+generated completion. The API can support more than one choice.
+
+    [0]
+
+Gets the first item in the list.
+
+Remember: Python list indexing starts from zero.
+
+    .message
+
+Accesses the message object inside the first choice.
+
+    .content
+
+Accesses the text inside that message.
+
+Therefore:
+
+    result.choices[0].message.content
+
+Means:
+
+    Go to the response.
+    Get the first choice.
+    Get its message.
+    Extract the text content.
+
+Finally, print() displays that text in the terminal.
+
+Possible output:
+
+    The square root of 49 is 7.
+
+8. VIEWING THE COMPLETE RESPONSE
+
+The code contains this optional line:
+
+    # print(result)
+
+The # symbol makes this a comment, so Python does not execute it.
+
+If we remove the #, the program prints the response object. It may
+contain more information than just the generated answer.
+
+Another optional line is:
+
+    # print(json.dumps(result.model_dump(), indent=2, default=str))
+
+Let’s understand it.
+
+    result.model_dump()
+
+Converts the SDK response object into a Python dictionary.
+
+    json.dumps(...)
+
+Converts Python data into a JSON-formatted string.
+
+    indent=2
+
+Formats the JSON with indentation of two spaces, making it easier to
+read.
+
+    default=str
+
+Tells json.dumps() to convert objects it cannot otherwise serialize into
+strings.
+
+This is useful when we want to inspect the complete API response while
+learning or debugging.
+
+9. MULTI-TURN CONVERSATION
+
+A multi-turn conversation means a conversation containing multiple
+messages exchanged between the user and assistant.
+
+Example:
+
+    messages = [
+        {"role": "user", "content": "My name is Harish"}
+    ]
+
+This creates a list containing the first user message.
+
+A. append()
+
+Code:
+
+    messages.append({
+        "role": "assistant",
+        "content": "Nice to meet you, Harish!"
+    })
+
+append() adds a new item to the end of a Python list.
+
+Now the list contains:
+
+    [
+        {"role": "user", "content": "My name is Harish"},
+        {"role": "assistant", "content": "Nice to meet you, Harish!"}
+    ]
+
+B. Adding another user message
+
+    messages.append({
+        "role": "user",
+        "content": "What is my name?"
+    })
+
+Now the list contains three messages:
+
+    1. User: My name is Harish
+    2. Assistant: Nice to meet you, Harish!
+    3. User: What is my name?
+
+C. Sending the conversation history
+
+    response = client.chat.completions.create(
+        model=MODEL,
+        messages=messages
+    )
+
+This sends the conversation history to the model.
+
+The model can use the earlier messages to understand the context and
+answer the latest question.
+
+Important concept:
+
+An LLM API does not necessarily remember previous API calls by itself.
+In a basic chat application, we maintain conversation history and send
+the relevant messages again with each new request.
+
+This is how a simple multi-turn chatbot can maintain context.
+
+10. SYSTEM PROMPT, TEMPERATURE AND MAX TOKENS
+
+Example:
+
+    result = client.chat.completions.create(
+        model=MODEL,
+        messages=[
+            {
+                "role": "system",
+                "content": "You are a helpful assistant who makes jokes."
+            },
+            {
+                "role": "user",
+                "content": "What is the square root of 49?"
+            }
+        ],
+        temperature=0.7,
+        max_tokens=100
+    )
+
+There are three important concepts here.
+
+A. SYSTEM PROMPT
+
+    {
+        "role": "system",
+        "content": "You are a helpful assistant who makes jokes."
+    }
+
+A system message provides instructions that guide the AI’s behaviour.
+
+Other examples:
+
+    Act as a Java programming tutor.
+    Explain concepts to beginners.
+    Use simple English.
+    Give an example with every explanation.
+
+The model uses these instructions when generating its response.
+
+B. TEMPERATURE
+
+    temperature=0.7
+
+Temperature controls the randomness or variability of the generated
+output.
+
+General tendency:
+
+    Lower temperature
+        More predictable and focused responses.
+
+    Higher temperature
+        More varied and potentially more creative responses.
+
+Illustrative examples:
+
+    0.0  = very predictable
+    0.3  = relatively focused
+    0.7  = more varied
+    1.0  = potentially more random
+
+These are general tendencies, not guarantees. Supported values and
+behaviour depend on the model and API.
+
+C. MAX TOKENS
+
+    max_tokens=100
+
+Limits the maximum number of tokens generated in the completion.
+
+What is a token?
+
+A token is a small unit of text processed by an LLM. It can represent a
+complete word, part of a word, punctuation or another text unit.
+
+Important:
+
+    100 tokens does NOT mean 100 words.
+
+The number of words represented by tokens varies.
+
+11. TOKEN USAGE
+
+Code:
+
+    print("Input tokens:", result.usage.prompt_tokens)
+    print("Output tokens:", result.usage.completion_tokens)
+    print("Total tokens:", result.usage.total_tokens)
+
+The API response contains usage information.
+
+A. prompt_tokens
+
+    result.usage.prompt_tokens
+
+The number of tokens used for the input prompt, including the messages
+and other input sent to the model.
+
+B. completion_tokens
+
+    result.usage.completion_tokens
+
+The number of tokens generated in the completion.
+
+C. total_tokens
+
+    result.usage.total_tokens
+
+The total token count reported for the request.
+
+Illustrative output:
+
+    Input tokens: 15
+    Output tokens: 8
+    Total tokens: 23
+
+These are example numbers, not the actual usage of your request.
+
+Why is token usage important?
+
+AI APIs may have usage limits and pricing based on tokens. Monitoring
+token usage helps us understand and manage API consumption.
+
+12. STREAMING
+
+Normally, a non-streaming API request returns the completed response
+after generation finishes.
+
+Streaming lets the program receive the generated response in smaller
+chunks as the model produces it.
+
+This is why text can appear progressively, instead of waiting for the
+entire response.
+
+Code:
+
+    stream = client.chat.completions.create(
+        model=MODEL,
+        messages=[
+            {
+                "role": "user",
+                "content": "Tell me a short story about a robot."
+            }
+        ],
+        stream=True
+    )
+
+A. stream=True
+
+This requests a streamed response.
+
+B. Loop through the chunks
+
+    for chunk in stream:
+
+This loops through the chunks received from the API.
+
+C. Extract text from each chunk
+
+    content = chunk.choices[0].delta.content
+
+Understand the parts:
+
+    chunk
+        One piece of the streamed response.
+
+    choices[0]
+        The first generated choice.
+
+    delta
+        The incremental update in that chunk.
+
+    content
+        The text contained in that update.
+
+D. Check whether text exists
+
+    if content:
+
+Some chunks may not contain text. This condition checks that content is
+available before trying to print it.
+
+E. Print immediately
+
+    print(content, end="", flush=True)
+
+    end=""
+
+Prevents print() from adding a new line after every chunk.
+
+    flush=True
+
+Tells Python to display the output immediately instead of waiting for
+the normal output buffer.
+
+Together, these lines allow the generated text to appear progressively.
+
+Simple comparison:
+
+    Normal response:
+        Wait for the complete answer.
+        Then display it.
+
+    Streaming response:
+        Receive a chunk.
+        Display it.
+        Receive the next chunk.
+        Display it.
+        Continue until generation finishes.
+
+Note: The exact content and structure of streaming chunks can vary. Some
+chunks may contain metadata rather than text.
+
+13. CONNECTING ALL THE CONCEPTS
+
+Here is the overall flow of the program:
+
+    1. Import the required libraries.
+
+    2. Load the .env file.
+
+    3. Retrieve the NVIDIA API key.
+
+    4. Check whether the API key exists.
+
+    5. Create the NVIDIA-configured client.
+
+    6. Select the AI model.
+
+    7. Prepare the messages.
+
+    8. Send the API request.
+
+    9. Receive the response.
+
+    10. Extract and print the generated text.
+
+The optional sections demonstrate additional features:
+
+    - Inspecting the complete response.
+    - Maintaining conversation history.
+    - Giving the model system instructions.
+    - Controlling output variability.
+    - Limiting generated tokens.
+    - Checking token usage.
+    - Receiving responses through streaming.
+
+14. IMPORTANT PYTHON CONCEPTS USED IN THIS PROGRAM
+
+Make sure you understand these Python concepts too:
+
+    import
+        Brings library functionality into the program.
+
+    variable
+        Stores a value.
+
+    function
+        A reusable block of code that performs a task.
+
+    method
+        A function associated with an object.
+
+    object
+        An instance of a class that can contain data and functionality.
+
+    list
+        An ordered collection of items, written using square brackets.
+
+    dictionary
+        A collection of key-value pairs, written using curly braces.
+
+    append()
+        Adds an item to the end of a list.
+
+    os.getenv()
+        Retrieves an environment variable.
+
+    .strip()
+        Removes whitespace from the beginning and end of a string.
+
+    if
+        Executes code when a condition is true.
+
+    raise
+        Raises an exception.
+
+    for loop
+        Repeats code for each item in an iterable.
+
+    comment (#)
+        Text Python ignores during execution.
+
+    __file__
+        Special variable representing the current Python file's location.
+
+15. WHY ARE THESE CONCEPTS USEFUL?
+
+These concepts form the foundation of building applications with LLMs.
+
+They are useful when learning:
+
+    GenAI applications
+    Chatbots
+    Retrieval-Augmented Generation (RAG)
+    AI agents
+    Agentic AI workflows
+
+For example, in a RAG application:
+
+    - We retrieve relevant information.
+    - We prepare a prompt containing that information.
+    - We send the prompt to an LLM API.
+    - We receive the model's answer.
+    - We display the answer to the user.
+
+The API communication concepts learned here are useful in that process.
+
+FINAL REVISION
+
+Remember these five especially important ideas:
+
+1.  CLIENT The client is the object that helps Python communicate with
+    the API.
+
+2.  MODEL The model identifier tells the API which AI model should
+    generate the response.
+
+3.  MESSAGES Messages contain the conversation, including the role and
+    content.
+
+4.  RESPONSE The API returns a structured response. We use
+    result.choices[0].message.content to extract the generated text.
+
+5.  STREAMING Streaming allows us to receive and display generated text
+    in chunks.
+
+LEARNING ADVICE
+
+Do not try to memorise the entire program.
+
+Understand what each part does, run small experiments, change the user’s
+question, try a system prompt, and inspect the response.
+
+The goal is to understand the flow:
+
+    Python -> API -> AI model -> API response -> Python
+
+That is the foundation of communicating with an LLM through code.
